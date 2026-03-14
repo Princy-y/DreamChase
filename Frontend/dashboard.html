@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DreamChase — Dashboard</title>
+    <meta name="description"
+        content="Track your career roadmap progress, daily tasks, and skill development with DreamChase AI." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+
+    <!-- ── Navigation ── -->
+    <nav class="navbar scrolled" id="navbar">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo">
+                <span>DreamChase</span>
+            </a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="dashboard.html" class="nav-link nav-link--active">Dashboard</a>
+                <a href="chat.html" class="nav-link">Chat</a>
+                <a href="index.html" class="nav-cta">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ── Main Content ── -->
+    <main class="dash-main">
+
+        <!-- Ambient blobs -->
+        <div class="blob blob-1" aria-hidden="true"></div>
+        <div class="blob blob-2" aria-hidden="true"></div>
+
+        <!-- Page Header -->
+        <section class="dash-header" id="dashHeader">
+            <div class="badge">✦ Career Intelligence Dashboard</div>
+            <h1 class="dash-title">Your <span class="gradient-text">Dashboard</span></h1>
+            <p class="dash-sub">Track your roadmap progress, complete daily tasks, and watch your skills grow.</p>
+        </section>
+
+        <!-- Stats Row -->
+        <section class="stats-row" id="statsRow">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon--purple">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value" id="statPhases">-</span>
+                    <span class="stat-label">Phases</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon stat-icon--cyan">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value" id="statTasks">-</span>
+                    <span class="stat-label">Total Tasks</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon stat-icon--green">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value" id="statCompleted">-</span>
+                    <span class="stat-label">Completed</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Two Column Layout -->
+        <div class="dash-grid">
+
+            <!-- Roadmap Section -->
+            <section class="dash-card dash-card--wide" id="roadmapSection">
+                <div class="dash-card__header">
+                    <div class="dash-card__title-row">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                            <path
+                                d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <h2>Your Roadmap</h2>
+                    </div>
+                    <a href="index.html" class="dash-card__action">+ Generate New</a>
+                </div>
+                <div class="dash-card__body" id="roadmap-container">
+                    <!-- roadmap.js populates this -->
+                </div>
+            </section>
+
+            <!-- Progress Section -->
+            <section class="dash-card" id="progressSection">
+                <div class="dash-card__header">
+                    <div class="dash-card__title-row">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                            <path d="M18 20V10M12 20V4M6 20v-6" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <h2>Your Progress</h2>
+                    </div>
+                </div>
+                <div class="dash-card__body" id="progress-container">
+                    <!-- progress.js populates this -->
+                </div>
+            </section>
+
+            <!-- Daily Tasks Section -->
+            <section class="dash-card" id="tasksSection">
+                <div class="dash-card__header">
+                    <div class="dash-card__title-row">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke="currentColor"
+                                stroke-width="2" />
+                            <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                            <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                            <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2" />
+                        </svg>
+                        <h2>Today's Tasks</h2>
+                    </div>
+                    <span class="dash-card__badge">Daily</span>
+                </div>
+                <div class="dash-card__body" id="tasks-container">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+
+        </div>
+
+    </main>
+
+    <!-- ── Footer ── -->
+    <footer class="site-footer">
+        <p>© 2026 DreamChase AI </p>
+    </footer>
+
+    <script src="js/roadmap.js" defer></script>
+    <script src="js/progress.js" defer></script>
+    <script>
+        // Navbar scroll
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            navbar.classList.toggle('scrolled', window.scrollY > 20);
+        }, { passive: true });
+    </script>
+</body>
+
+</html>
