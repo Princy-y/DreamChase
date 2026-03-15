@@ -23,26 +23,22 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             
             const originalHTML = googleBtn.innerHTML;
-            googleBtn.innerHTML = `Connecting... ⏳`;
+            googleBtn.innerHTML = `Connecting... `;
             googleBtn.style.pointerEvents = 'none';
 
             try {
-                // This pops up the official Google Sign-In window!
                 const result = await signInWithPopup(auth, provider);
                 const user = result.user;
 
-                // Success! We extract their real Google Name and Email
                 localStorage.setItem("userName", user.displayName);
                 localStorage.setItem("userEmail", user.email);
 
-                // Teleport to the Dashboard!
                 window.location.href = "dashboard.html";
 
             } catch (error) {
                 console.error("Firebase Login Error:", error);
                 alert("Oops! Google Sign-in failed: " + error.message);
                 
-                // Reset button if they cancel or it fails
                 googleBtn.innerHTML = originalHTML;
                 googleBtn.style.pointerEvents = 'auto';
             }
@@ -110,12 +106,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginBtn = document.getElementById("loginBtn");
     const originalText = loginBtn.innerHTML;
     
-    // Show a loading state
     loginBtn.innerHTML = `<span class="btn-text">Authenticating...</span>`;
     loginBtn.style.pointerEvents = 'none';
 
     try {
-      // 🚀 Send the data to your real Python Backend!
       const response = await fetch('http://127.0.0.1:5000/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -125,14 +119,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await response.json();
 
       if (data.success) {
-        // Successful Login! Save the REAL data from the backend
         localStorage.setItem("userName", data.name);
         localStorage.setItem("userEmail", data.email);
         
-        // Teleport to dashboard
         window.location.href = "dashboard.html";
       } else {
-        // Show the error from Python (like "Incorrect Password")
         alert(data.error);
         loginBtn.innerHTML = originalText;
         loginBtn.style.pointerEvents = 'auto';

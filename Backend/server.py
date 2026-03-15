@@ -36,7 +36,6 @@ def login():
             USERS_DB[email] = {"password": password, "name": name}
             print(f"New user auto-registered: {name} ({email})")
 
-        # Verify Password
         if USERS_DB[email]["password"] == password:
             return jsonify({
                 "success": True, 
