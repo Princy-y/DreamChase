@@ -1,3 +1,56 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCMOlDgUqwwbZmNQXDMTgm3RJ0g8w_aHOI",
+  authDomain: "dreamchase-4ecd1.firebaseapp.com",
+  projectId: "dreamchase-4ecd1",
+  storageBucket: "dreamchase-4ecd1.firebasestorage.app",
+  messagingSenderId: "340567768826",
+  appId: "1:340567768826:web:a9dee29b883c9da56d9343"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    const googleBtn = Array.from(document.querySelectorAll('button, a')).find(el => el.textContent.includes('Google'));
+
+    if (googleBtn) {
+        googleBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            
+            const originalHTML = googleBtn.innerHTML;
+            googleBtn.innerHTML = `Connecting... ⏳`;
+            googleBtn.style.pointerEvents = 'none';
+
+            try {
+                // This pops up the official Google Sign-In window!
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+
+                // Success! We extract their real Google Name and Email
+                localStorage.setItem("userName", user.displayName);
+                localStorage.setItem("userEmail", user.email);
+
+                // Teleport to the Dashboard!
+                window.location.href = "dashboard.html";
+
+            } catch (error) {
+                console.error("Firebase Login Error:", error);
+                alert("Oops! Google Sign-in failed: " + error.message);
+                
+                // Reset button if they cancel or it fails
+                googleBtn.innerHTML = originalHTML;
+                googleBtn.style.pointerEvents = 'auto';
+            }
+        });
+    }
+
+
+
 (function () {
   "use strict";
 
@@ -93,3 +146,5 @@
     }
   }
 })();
+
+});
