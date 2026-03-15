@@ -30,7 +30,7 @@ def generate_roadmap():
         Use ONLY these specific HTML structures:
 
         1. For the Day heading: 
-           <div class="rm-h2">Day 1: [Topic]</div>
+           <div class="rm-h2">Task 1: [Topic]</div>
            
         2. For the specific daily task (Make it simple and actionable for 1 hour):
            <div class="rm-step task-step">
@@ -44,7 +44,7 @@ def generate_roadmap():
              <div class="rm-p">[Link/Resource]</div>
            </div>
 
-        Generate exactly 7 days. Keep it concise, highly motivating, and achievable.
+        Generate exactly 7 tasks. Keep it concise, highly motivating, and achievable.
         """
 
         response = model.generate_content(prompt)

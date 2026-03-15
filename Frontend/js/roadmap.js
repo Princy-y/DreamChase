@@ -10,14 +10,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // Set Dashboard Subtitle
     const dashSub = document.querySelector('.dash-sub');
     if (dashSub) dashSub.textContent = `Career goal: ${career}`;
 
-    // Load Roadmap HTML
     roadmapContainer.innerHTML = rawRoadmap;
 
-    // Calculate Top Stats
     const phases = roadmapContainer.querySelectorAll('.rm-h2').length;
     const tasks = roadmapContainer.querySelectorAll('.rm-step').length;
     let unlockedCount = parseInt(localStorage.getItem('dc_unlocked_tasks')) || 0;
@@ -118,9 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (Date.now() < end) requestAnimationFrame(frame);
                         }());
 
-                        // Show dynamic week alert
                         setTimeout(() => {
-                            if(confirm(`🎉 INCREDIBLE! You completed Week ${currentWeek}!\n\nAre you ready for Week ${currentWeek + 1}?`)) {
+                            if(confirm(`🎉 EXCELLENT! Level ${currentWeek} Complete!\n\nReady to unlock Level ${currentWeek + 1}?`)) {
                                 triggerNextWeek(currentWeek + 1);
                             }
                         }, 1500);
@@ -135,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btnWrap.style.textAlign = 'center';
             btnWrap.style.marginTop = '30px';
             btnWrap.style.marginBottom = '20px';
-            btnWrap.innerHTML = `<button id="nextWeekBtn" style="padding: 12px 24px; font-size: 16px; background: var(--gradient); border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 600; box-shadow: 0 4px 15px rgba(108, 99, 255, 0.4);"> Generate Week ${currentWeek + 1}</button>`;
+            btnWrap.innerHTML = `<button id="nextWeekBtn" style="padding: 12px 24px; font-size: 16px; background: var(--gradient); border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 600; box-shadow: 0 4px 15px rgba(108, 99, 255, 0.4);"> Unlock Level ${currentWeek + 1}</button>`;
             
             document.getElementById('roadmap-container').appendChild(btnWrap);
             
@@ -148,10 +144,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // The Generator Engine
     async function triggerNextWeek(nextWeekNumber) {
         const baseCareer = localStorage.getItem('dc_career') || 'Your Career';
-        document.getElementById('roadmap-container').innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-secondary);">Generating Week ${nextWeekNumber}... please wait. </div>`;
+        document.getElementById('roadmap-container').innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-secondary);">Generating Level ${nextWeekNumber}... please wait. </div>`;
         
         try {
-            const nextLevelCareer = `Week ${nextWeekNumber} of ${baseCareer}`; 
+            const nextLevelCareer = `Level ${nextWeekNumber} of ${baseCareer}`; 
             const res = await fetch('http://127.0.0.1:5000/generate-roadmap', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
