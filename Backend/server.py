@@ -22,28 +22,29 @@ def generate_roadmap():
 
         prompt = f"""
         Act as an expert Career Coach. A student wants to become a {dream}.
-        Create a practical, step-by-step learning roadmap.
+        Create a practical, step-by-step 7-day learning roadmap, starting from absolute beginner.
+        Break it down into simple, achievable DAILY tasks. Do not use broad phases.
 
         CRITICAL INSTRUCTION: You MUST return the response ONLY as valid HTML code. 
         Do not use markdown backticks (```html).
-        Use ONLY these specific HTML structures to format your response:
+        Use ONLY these specific HTML structures:
 
-        1. For phase or week headings: 
-           <div class="rm-h2">Phase 1: Title</div>
+        1. For the Day heading: 
+           <div class="rm-h2">Day 1: [Topic]</div>
            
-        2. For specific tasks/steps:
-           <div class="rm-step">
-             <div class="rm-num">#</div>
-             <div class="rm-p"><span class="rm-bold">Task:</span> Description here</div>
+        2. For the specific daily task (Make it simple and actionable for 1 hour):
+           <div class="rm-step task-step">
+             <div class="rm-num">☐</div>
+             <div class="rm-p"><span class="rm-bold">Action:</span> [Specific 1-hour task]</div>
            </div>
            
-        3. For bullet points (resources, tips):
+        3. For resources:
            <div class="rm-bullet">
              <div class="rm-dot"></div>
-             <div class="rm-p">Your tip or resource link</div>
+             <div class="rm-p">[Link/Resource]</div>
            </div>
 
-        Keep it concise, highly motivating, and structure it into 3-4 distinct phases.
+        Generate exactly 7 days. Keep it concise, highly motivating, and achievable.
         """
 
         response = model.generate_content(prompt)

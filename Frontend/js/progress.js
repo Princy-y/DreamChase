@@ -1,70 +1,55 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const progressContainer = document.getElementById('progress-container');
-    if (!progressContainer) return;
+    
+    function updateProgress() {
+        const progressContainer = document.getElementById('progress-container');
+        if (!progressContainer) return;
 
-    const rawRoadmap = localStorage.getItem('dc_roadmap');
+        const rawRoadmap = localStorage.getItem('dc_roadmap');
+        if (!rawRoadmap) {
+            progressContainer.innerHTML = '<div style="color:var(--text-secondary); text-align: center; padding: 20px 0;">No progress metrics available. Start learning to see your skills grow!</div>';
+            return;
+        }
 
-    if (!rawRoadmap) {
-        progressContainer.innerHTML = '<div style="color:var(--text-secondary); text-align: center; padding: 20px 0;">No progress metrics available. Start learning to see your skills grow!</div>';
-        return;
-    }
+        const temp = document.createElement('div');
+        temp.innerHTML = rawRoadmap;
+        const phaseEls = temp.querySelectorAll('.rm-h2');
+        
+        const unlockedCount = parseInt(localStorage.getItem('dc_unlocked_tasks')) || 0;
 
-    const temp = document.createElement('div');
-    temp.innerHTML = rawRoadmap;
+        const grid = document.createElement('div');
+        grid.className = 'progress-grid';
 
-    const phaseEls = temp.querySelectorAll('.rm-h2');
-    if (phaseEls.length === 0) {
-        progressContainer.innerHTML = '<div style="color:var(--text-secondary); text-align: center; padding: 20px 0;">Generate a roadmap to track your progress here.</div>';
-        return;
-    }
+        phaseEls.forEach((el, idx) => {
+            const label = el.textContent.trim().slice(0, 36);
+            
+            const pct = (idx < unlockedCount) ? 100 : 0;
 
-    const savedState = JSON.parse(localStorage.getItem('dc_task_state') || '{"done":0}');
-    const totalTasks = temp.querySelectorAll('.rm-step').length;
-    const completedTotal = savedState.done || 0;
+            const item = document.createElement('div');
+            item.className = 'progress-item';
 
-    const grid = document.createElement('div');
-    grid.className = 'progress-grid';
+            item.innerHTML = `
+                <div class="progress-item__header">
+                    <span class="progress-item__label">${label}</span>
+                    <span class="progress-item__value">${pct}%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-bar__fill" style="width: 0%; transition: width 1s ease;"></div>
+                </div>
+            `;
+            grid.appendChild(item);
 
-    phaseEls.forEach((el, idx) => {
-        const label = el.textContent.trim().slice(0, 36);
-        const pct = idx === 0 && totalTasks > 0
-            ? Math.round((completedTotal / totalTasks) * 100)
-            : 0;
-
-        const item = document.createElement('div');
-        item.className = 'progress-item';
-
-        const header = document.createElement('div');
-        header.className = 'progress-item__header';
-
-        const labelEl = document.createElement('span');
-        labelEl.className = 'progress-item__label';
-        labelEl.textContent = label;
-
-        const valueEl = document.createElement('span');
-        valueEl.className = 'progress-item__value';
-        valueEl.textContent = `${pct}%`;
-
-        header.appendChild(labelEl);
-        header.appendChild(valueEl);
-
-        const bar = document.createElement('div');
-        bar.className = 'progress-bar';
-
-        const fill = document.createElement('div');
-        fill.className = 'progress-bar__fill';
-        fill.style.width = '0%';
-
-        bar.appendChild(fill);
-        item.appendChild(header);
-        item.appendChild(bar);
-        grid.appendChild(item);
-
-        requestAnimationFrame(() => {
-            setTimeout(() => { fill.style.width = pct + '%'; }, 100 + idx * 80);
+            requestAnimationFrame(() => {
+                setTimeout(() => { 
+                    item.querySelector('.progress-bar__fill').style.width = pct + '%'; 
+                }, 100 + idx * 80);
+            });
         });
-    });
 
-    progressContainer.innerHTML = '';
-    progressContainer.appendChild(grid);
+        progressContainer.innerHTML = '';
+        progressContainer.appendChild(grid);
+    }
+
+    updateProgress();
+    
+    window.addEventListener('updateDashboard', updateProgress);
 });

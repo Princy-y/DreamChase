@@ -89,8 +89,13 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('dc_career', career);
             localStorage.setItem('dc_roadmap', roadmap);
             localStorage.removeItem('dc_task_state');
+            localStorage.setItem('dc_unlocked_tasks', '0');
+            localStorage.setItem('dc_current_week', '1');
 
             setState('result');
+            
+            
+            
         } catch (err) {
             console.error(err);
             setState('empty');
@@ -99,4 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.disabled = false;
         }
     }
+
+ 
 });
