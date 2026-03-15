@@ -13,6 +13,42 @@ CORS(app)
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel("gemini-3.1-flash-lite-preview")
 
+# A simple in-memory database
+# This resets when the server restarts, but it's perfect for a demo!
+USERS_DB = {
+    "test@dream.com": {"password": "123", "name": "Dream"}
+}
+
+@app.route("/login", methods=["POST", "OPTIONS"])
+def login():
+    if request.method == "OPTIONS":
+        return jsonify({"message": "CORS preflight"}), 200
+
+    try:
+        data = request.json
+        email = data.get("email", "").strip().lower()
+        password = data.get("password", "")
+
+        # Auto-Registration : If it's a new email, create the account instantly!
+        if email not in USERS_DB:
+            # Extract the first part of the email to use as their name
+            name = email.split("@")[0].capitalize()
+            USERS_DB[email] = {"password": password, "name": name}
+            print(f"New user auto-registered: {name} ({email})")
+
+        # Verify Password
+        if USERS_DB[email]["password"] == password:
+            return jsonify({
+                "success": True, 
+                "name": USERS_DB[email]["name"], 
+                "email": email
+            }), 200
+        else:
+            return jsonify({"success": False, "error": "Incorrect password. Try again!"}), 401
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
 @app.route("/generate-roadmap", methods=["POST"])
 def generate_roadmap():
     try:

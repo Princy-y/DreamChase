@@ -1,4 +1,39 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // 👤 DYNAMIC NAVBAR LOGIC
+    const loggedInUser = localStorage.getItem('userName');
+    
+    if (loggedInUser) {
+        // 1. Change the "Login" link to "Hi, [Name]"
+        const loginLinks = document.querySelectorAll('a[href="login.html"]');
+        loginLinks.forEach(link => {
+            // Extract just their first name
+            const firstName = loggedInUser.split(' ')[0]; 
+            link.innerHTML = `<span style="color: #3ECFCF; font-weight: 600;">Hi, ${firstName} </span>`;
+            link.href = "dashboard.html"; // Clicking their name takes them to the dashboard
+        });
+
+        // 2. Turn the "Get Started" button into a "Logout" button
+        const ctaButtons = document.querySelectorAll('.nav-cta');
+        ctaButtons.forEach(btn => {
+            // Style it to look like a secondary 'Logout' button
+            btn.textContent = "Logout";
+            btn.style.background = "rgba(255, 255, 255, 0.1)";
+            btn.style.border = "1px solid rgba(255,255,255,0.2)";
+            btn.style.color = "#fff";
+            
+            // Overwrite any previous click actions
+            btn.onclick = (e) => {
+                e.preventDefault();
+                
+                // Wipe the memory clean!
+                localStorage.clear(); 
+                
+                // Refresh the page so the navbar goes back to normal
+                window.location.href = "index.html"; 
+            };
+        });
+    }
+
     const roadmapContainer = document.getElementById('roadmap-container');
     if (!roadmapContainer) return;
 

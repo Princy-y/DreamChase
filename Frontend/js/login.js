@@ -53,8 +53,43 @@
     handleLogin(emailInput.value.trim(), pwdInput.value);
   });
 
-  function handleLogin(email, password) {
-    //  fetch('/api/login', { method: 'POST', body: JSON.stringify({ email, password }) })
-    console.log("[DreamChase] Login submitted:", { email });
+  async function handleLogin(email, password) {
+    const loginBtn = document.getElementById("loginBtn");
+    const originalText = loginBtn.innerHTML;
+    
+    // Show a loading state
+    loginBtn.innerHTML = `<span class="btn-text">Authenticating...</span>`;
+    loginBtn.style.pointerEvents = 'none';
+
+    try {
+      // 🚀 Send the data to your real Python Backend!
+      const response = await fetch('http://127.0.0.1:5000/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Successful Login! Save the REAL data from the backend
+        localStorage.setItem("userName", data.name);
+        localStorage.setItem("userEmail", data.email);
+        
+        // Teleport to dashboard
+        window.location.href = "dashboard.html";
+      } else {
+        // Show the error from Python (like "Incorrect Password")
+        alert(data.error);
+        loginBtn.innerHTML = originalText;
+        loginBtn.style.pointerEvents = 'auto';
+      }
+      
+    } catch (err) {
+      console.error("Backend connection failed:", err);
+      alert("Backend server is disconnected! Is server.py running?");
+      loginBtn.innerHTML = originalText;
+      loginBtn.style.pointerEvents = 'auto';
+    }
   }
 })();
