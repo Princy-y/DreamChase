@@ -142,11 +142,33 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (Date.now() < end) requestAnimationFrame(frame);
                         }());
 
+                       // Show Custom Modal instead of default confirm
                         setTimeout(() => {
-                            if(confirm(`🎉 EXCELLENT! Level ${currentWeek} Complete!\n\nReady to unlock Level ${currentWeek + 1}?`)) {
-                                triggerNextWeek(currentWeek + 1);
-                            }
-                        }, 1500);
+                            const modalOverlay = document.getElementById('levelUpModal');
+                            const modalText = document.getElementById('modalLevelText');
+                            const confirmBtn = document.getElementById('modalConfirm');
+                            const cancelBtn = document.getElementById('modalCancel');
+
+                            // Update the text dynamically
+                            modalText.innerText = `Level ${currentWeek} Complete!`;
+                            confirmBtn.innerText = `Unlock Level ${currentWeek + 1} `;
+
+                            // Show it with a smooth fade-in
+                            modalOverlay.style.display = 'flex';
+                            setTimeout(() => modalOverlay.classList.add('show'), 10);
+
+                            // Handle Clicks
+                            confirmBtn.onclick = () => {
+                                modalOverlay.classList.remove('show');
+                                setTimeout(() => modalOverlay.style.display = 'none', 300);
+                                triggerNextWeek(currentWeek + 1); // Your generator function!
+                            };
+
+                            cancelBtn.onclick = () => {
+                                modalOverlay.classList.remove('show');
+                                setTimeout(() => modalOverlay.style.display = 'none', 300);
+                            };
+                        }, 1500); // Waits for confetti to finish
                     }
                 });
             }
