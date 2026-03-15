@@ -2,123 +2,75 @@ document.addEventListener('DOMContentLoaded', () => {
     const roadmapContainer = document.getElementById('roadmap-container');
     if (!roadmapContainer) return;
 
-    // Roadmap data will come from the backend. Currently empty.
-    const phases = [];
+    const rawRoadmap = localStorage.getItem('dc_roadmap');
+    const career = localStorage.getItem('dc_career') || 'Your Career';
 
-    if (phases.length === 0) {
-        roadmapContainer.innerHTML = '<div style="color:var(--text-secondary); padding: 20px 0; text-align: center;">No roadmap generated yet. Generate one to see it here!</div>';
+    if (!rawRoadmap) {
+        roadmapContainer.innerHTML = '<div style="color:var(--text-secondary); padding: 20px 0; text-align: center;">No roadmap generated yet. <a href="index.html" style="color:var(--grad-start);">Generate one here!</a></div>';
+        ['statPhases', 'statTasks', 'statCompleted'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = '0';
+        });
         return;
     }
 
-    function renderRoadmap() {
-        const timeline = document.createElement('div');
-        timeline.className = 'roadmap-timeline';
+    const dashSub = document.querySelector('.dash-sub');
+    if (dashSub) dashSub.textContent = `Career goal: ${career}`;
 
-        phases.forEach(phase => {
-            const phaseEl = document.createElement('div');
-            phaseEl.className = 'roadmap-phase';
+    roadmapContainer.innerHTML = rawRoadmap;
 
-            const marker = document.createElement('div');
-            marker.className = 'roadmap-phase__marker';
-            marker.textContent = phase.num;
+    const phases = roadmapContainer.querySelectorAll('.rm-h2').length;
+    const tasks = roadmapContainer.querySelectorAll('.rm-step').length;
 
-            const content = document.createElement('div');
-            content.className = 'roadmap-phase__content';
+    const savedState = JSON.parse(localStorage.getItem('dc_task_state') || '{"done":0}');
+    const completed = savedState.done || 0;
 
-            const title = document.createElement('div');
-            title.className = 'roadmap-phase__title';
-            title.textContent = `Phase ${phase.num} — ${phase.title}`;
+    const statPhases = document.getElementById('statPhases');
+    const statTasks = document.getElementById('statTasks');
+    const statCompleted = document.getElementById('statCompleted');
+    if (statPhases) statPhases.textContent = phases || '-';
+    if (statTasks) statTasks.textContent = tasks || '-';
+    if (statCompleted) statCompleted.textContent = completed;
 
-            const time = document.createElement('div');
-            time.className = 'roadmap-phase__time';
-            time.textContent = phase.time;
-
-            const tasksWrap = document.createElement('div');
-            tasksWrap.className = 'roadmap-phase__tasks';
-
-            phase.tasks.forEach(task => {
-                const taskEl = document.createElement('div');
-                taskEl.className = 'roadmap-task' + (task.done ? ' completed' : '');
-
-                const check = document.createElement('div');
-                check.className = 'roadmap-task__check';
-                check.addEventListener('click', () => {
-                    task.done = !task.done;
-                    taskEl.classList.toggle('completed', task.done);
-                    updateStats();
-                });
-
-                const label = document.createElement('span');
-                label.textContent = task.text;
-
-                taskEl.appendChild(check);
-                taskEl.appendChild(label);
-                tasksWrap.appendChild(taskEl);
-            });
-
-            content.appendChild(title);
-            content.appendChild(time);
-            content.appendChild(tasksWrap);
-            phaseEl.appendChild(marker);
-            phaseEl.appendChild(content);
-            timeline.appendChild(phaseEl);
-        });
-
-        roadmapContainer.innerHTML = '';
-        roadmapContainer.appendChild(timeline);
-    }
-
-    function updateStats() {
-        const allTasks = phases.flatMap(p => p.tasks);
-        const completed = allTasks.filter(t => t.done).length;
-        const statCompleted = document.getElementById('statCompleted');
-        const statTasks = document.getElementById('statTasks');
-        if (statCompleted) statCompleted.textContent = completed;
-        if (statTasks) statTasks.textContent = allTasks.length;
-    }
-
-    // Also render daily tasks
     const tasksContainer = document.getElementById('tasks-container');
     if (tasksContainer) {
-        const dailyTasks = [];
-
-        if (dailyTasks.length === 0) {
-            tasksContainer.innerHTML = '<div style="color:var(--text-secondary); text-align: center; padding: 20px 0;">No daily tasks yet.</div>';
+        const stepEls = roadmapContainer.querySelectorAll('.rm-step');
+        if (stepEls.length === 0) {
+            tasksContainer.innerHTML = '<div style="color:var(--text-secondary); text-align:center; padding:20px 0;">No tasks found.</div>';
         } else {
-            const dailyWrap = document.createElement('div');
-            dailyWrap.className = 'daily-tasks';
+            const wrap = document.createElement('div');
+            wrap.className = 'daily-tasks';
+            let shown = 0;
+            stepEls.forEach(step => {
+                if (shown >= 5) return;
+                const text = step.querySelector('.rm-p, span, div:not(.rm-num)')?.textContent?.trim();
+                if (!text) return;
+                shown++;
 
-            dailyTasks.forEach(task => {
                 const el = document.createElement('div');
-                el.className = 'daily-task' + (task.done ? ' done' : '');
+                el.className = 'daily-task';
 
                 const check = document.createElement('div');
                 check.className = 'daily-task__check';
 
-                const text = document.createElement('span');
-                text.className = 'daily-task__text';
-                text.textContent = task.text;
-
-                const tag = document.createElement('span');
-                tag.className = `daily-task__tag daily-task__tag--${task.tag}`;
-                tag.textContent = task.tag;
+                const label = document.createElement('span');
+                label.className = 'daily-task__text';
+                label.textContent = text;
 
                 el.addEventListener('click', () => {
-                    task.done = !task.done;
-                    el.classList.toggle('done', task.done);
+                    const isDone = el.classList.toggle('done');
+                    const state = JSON.parse(localStorage.getItem('dc_task_state') || '{"done":0}');
+                    state.done = Math.max(0, (state.done || 0) + (isDone ? 1 : -1));
+                    localStorage.setItem('dc_task_state', JSON.stringify(state));
+                    if (statCompleted) statCompleted.textContent = state.done;
                 });
 
                 el.appendChild(check);
-                el.appendChild(text);
-                el.appendChild(tag);
-                dailyWrap.appendChild(el);
+                el.appendChild(label);
+                wrap.appendChild(el);
             });
-
             tasksContainer.innerHTML = '';
-            tasksContainer.appendChild(dailyWrap);
+            tasksContainer.appendChild(wrap);
         }
     }
-
-    renderRoadmap();
-    updateStats();
 });

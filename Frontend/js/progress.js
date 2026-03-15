@@ -2,34 +2,51 @@ document.addEventListener('DOMContentLoaded', () => {
     const progressContainer = document.getElementById('progress-container');
     if (!progressContainer) return;
 
-    
-    const skills = [];
+    const rawRoadmap = localStorage.getItem('dc_roadmap');
 
-    if (skills.length === 0) {
+    if (!rawRoadmap) {
         progressContainer.innerHTML = '<div style="color:var(--text-secondary); text-align: center; padding: 20px 0;">No progress metrics available. Start learning to see your skills grow!</div>';
         return;
     }
 
+    const temp = document.createElement('div');
+    temp.innerHTML = rawRoadmap;
+
+    const phaseEls = temp.querySelectorAll('.rm-h2');
+    if (phaseEls.length === 0) {
+        progressContainer.innerHTML = '<div style="color:var(--text-secondary); text-align: center; padding: 20px 0;">Generate a roadmap to track your progress here.</div>';
+        return;
+    }
+
+    const savedState = JSON.parse(localStorage.getItem('dc_task_state') || '{"done":0}');
+    const totalTasks = temp.querySelectorAll('.rm-step').length;
+    const completedTotal = savedState.done || 0;
+
     const grid = document.createElement('div');
     grid.className = 'progress-grid';
 
-    skills.forEach(skill => {
+    phaseEls.forEach((el, idx) => {
+        const label = el.textContent.trim().slice(0, 36);
+        const pct = idx === 0 && totalTasks > 0
+            ? Math.round((completedTotal / totalTasks) * 100)
+            : 0;
+
         const item = document.createElement('div');
         item.className = 'progress-item';
 
         const header = document.createElement('div');
         header.className = 'progress-item__header';
 
-        const label = document.createElement('span');
-        label.className = 'progress-item__label';
-        label.textContent = skill.label;
+        const labelEl = document.createElement('span');
+        labelEl.className = 'progress-item__label';
+        labelEl.textContent = label;
 
-        const value = document.createElement('span');
-        value.className = 'progress-item__value';
-        value.textContent = `${skill.value}%`;
+        const valueEl = document.createElement('span');
+        valueEl.className = 'progress-item__value';
+        valueEl.textContent = `${pct}%`;
 
-        header.appendChild(label);
-        header.appendChild(value);
+        header.appendChild(labelEl);
+        header.appendChild(valueEl);
 
         const bar = document.createElement('div');
         bar.className = 'progress-bar';
@@ -43,11 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
         item.appendChild(bar);
         grid.appendChild(item);
 
-        // Animate on load
         requestAnimationFrame(() => {
-            setTimeout(() => {
-                fill.style.width = skill.value + '%';
-            }, 100);
+            setTimeout(() => { fill.style.width = pct + '%'; }, 100 + idx * 80);
         });
     });
 
