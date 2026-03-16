@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DreamChase — AI Mentor Chat</title>
+  <meta name="description" content="Chat with your AI career mentor for personalized guidance and advice on your career journey." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ── Navigation ── -->
+  <nav class="navbar scrolled" id="navbar">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <span>DreamChase</span>
+      </a>
+      <div class="nav-links">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="dashboard.html" class="nav-link">Dashboard</a>
+        <a href="chat.html" class="nav-link nav-link--active">Chat</a>
+        <a href="index.html" class="nav-cta">Get Started</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Chat Container ── -->
+  <main class="chat-main">
+
+    <!-- Ambient blobs -->
+    <div class="blob blob-1" aria-hidden="true"></div>
+    <div class="blob blob-2" aria-hidden="true"></div>
+
+    <!-- Chat Messages Area -->
+    <div class="chat-messages" id="chatMessages">
+
+      <!-- Welcome Message -->
+      <div class="chat-welcome" id="chatWelcome">
+        <h2 class="chat-welcome__title">Hi there! I'm your <span class="gradient-text">AI Career Mentor</span></h2>
+        <p class="chat-welcome__sub">Ask me anything about your career path, skills to learn, interview prep, or roadmap guidance.</p>
+      </div>
+
+      <!-- Chat History -->
+      <div id="chat-history"></div>
+
+    </div>
+
+    <!-- Chat Input -->
+    <div class="chat-input-wrap">
+      <form id="chat-form" class="chat-form" autocomplete="off">
+        <div class="chat-input-row">
+          <div class="chat-input-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <input
+            type="text"
+            id="chat-input"
+            class="chat-text-input"
+            placeholder="Ask your AI mentor anything…"
+            required
+            autocomplete="off"
+            spellcheck="false"
+            maxlength="500"
+            aria-label="Type your message"
+          />
+          <button type="submit" class="chat-send-btn" id="chatSendBtn" aria-label="Send message">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <p class="chat-disclaimer">AI responses are generated for guidance purposes. Always verify career advice with real professionals.</p>
+      </form>
+    </div>
+
+  </main>
+
+  <script src="js/chat.js" defer></script>
+  <script>
+    // Navbar scroll
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 20);
+    }, { passive: true });
+  </script>
+</body>
+</html>
