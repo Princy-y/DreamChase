@@ -213,6 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
     proofSource = null;
     proofBadge.textContent = 'No Source';
     proofBadge.classList.remove('active');
+    stopStreaming();
   }
 
   function toggleMute() {
@@ -321,6 +322,10 @@ document.addEventListener('DOMContentLoaded', () => {
       case 'error':
         showError(msg.message || 'Server error occurred.');
         addTranscript('system', `Error: ${msg.message}`);
+        break;
+      
+        case 'assistant_audio':
+        playAudioBuffer(msg.data); 
         break;
 
       default:
@@ -477,16 +482,27 @@ document.addEventListener('DOMContentLoaded', () => {
     setState(STATES.SESSION_ENDED);
     promptText.textContent = 'Session ended. Start a new session to verify again.';
     addTranscript('system', 'Session ended.');
+    stopStreaming();
   }
 
-  function startVerification() {
-    if (!proofSource) {
-      showError('Please start camera or share screen first.');
-      return;
+  async function startVerification() {
+    // 1. If they didn't pick camera/screen, just grab the microphone!
+    if (!mediaStream) {
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        proofSource = 'audio_only';
+        proofBadge.textContent = 'Audio Only Active';
+        proofBadge.classList.add('active');
+      } catch (e) {
+        showError('Microphone access is required to talk to the AI.');
+        return;
+      }
     }
+
     setState(STATES.VERIFYING_PROOF);
-    promptText.textContent = 'Analyzing your proof…';
-    addTranscript('system', `Verification started with ${proofSource === 'camera' ? 'Camera' : 'Screen Share'}.`);
+    promptText.textContent = 'Voice verification started! Listen for the question...';
+    addTranscript('system', `Verification started with ${proofSource}.`);
+    
     const wsMsg = { type: 'start_verification', source: proofSource };
     if (hasTaskCtx) {
       wsMsg.task_index = parseInt(taskIndex);
@@ -494,7 +510,110 @@ document.addEventListener('DOMContentLoaded', () => {
       wsMsg.career = taskCareer;
     }
     sendWsMessage(wsMsg);
+    
+    startStreamingToGemini();
   }
+
+let streamInterval;
+let audioProcessor;
+let audioCtx;
+
+// This takes the camera/mic and streams it to your Python backend
+function startStreamingToGemini() {
+    if (!mediaStream || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+    // 1. Stream Video Frames (1 frame per second)
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    streamInterval = setInterval(() => {
+        if (proofVideo.videoWidth > 0 && currentState === 'verifying_proof') {
+            canvas.width = 640; // Resize to save bandwidth
+            canvas.height = 480;
+            ctx.drawImage(proofVideo, 0, 0, canvas.width, canvas.height);
+            const base64Image = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+
+            sendWsMessage({
+                realtimeInput: {
+                    mediaChunks: [{ mimeType: "image/jpeg", data: base64Image }]
+                }
+            });
+        }
+    }, 1000);
+
+    // 2. Stream Audio (Must be 16kHz PCM for Gemini)
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+    const source = audioCtx.createMediaStreamSource(mediaStream);
+    audioProcessor = audioCtx.createScriptProcessor(4096, 1, 1);
+
+    audioProcessor.onaudioprocess = (e) => {
+        if (isMuted || currentState !== 'verifying_proof') return; 
+        
+        const inputData = e.inputBuffer.getChannelData(0);
+        const pcmData = new Int16Array(inputData.length);
+        for (let i = 0; i < inputData.length; i++) {
+            pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
+        }
+        
+        // Convert to Base64
+        let binary = '';
+        const bytes = new Uint8Array(pcmData.buffer);
+        for (let i = 0; i < bytes.byteLength; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        
+        sendWsMessage({
+            realtimeInput: {
+                mediaChunks: [{ mimeType: "audio/pcm;rate=16000", data: btoa(binary) }]
+            }
+        });
+    };
+
+    source.connect(audioProcessor);
+    audioProcessor.connect(audioCtx.destination);
+}
+
+// Clean up when session ends
+function stopStreaming() {
+    clearInterval(streamInterval);
+    if (audioProcessor) audioProcessor.disconnect();
+    if (audioCtx) audioCtx.close();
+    
+}
+
+/* ══════════════════════════════════════
+   10. AUDIO PLAYBACK (Gemini's Voice)
+   ══════════════════════════════════════ */
+let playbackCtx;
+let nextStartTime = 0;
+
+function playAudioBuffer(base64Data) {
+    if (!playbackCtx) {
+        // Gemini Live outputs at 24kHz
+        playbackCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+        nextStartTime = playbackCtx.currentTime;
+    }
+
+    // Convert Base64 back to raw binary buffer
+    const binaryStr = atob(base64Data);
+    const bytes = new Uint8Array(binaryStr.length);
+    for (let i = 0; i < binaryStr.length; i++) {
+        bytes[i] = binaryStr.charCodeAt(i);
+    }
+
+    playbackCtx.decodeAudioData(bytes.buffer, (buffer) => {
+        const source = playbackCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(playbackCtx.destination);
+        
+        // Schedule playback to prevent clicking/gaps
+        const startTime = Math.max(nextStartTime, playbackCtx.currentTime);
+        source.start(startTime);
+        nextStartTime = startTime + buffer.duration;
+    }, (err) => {
+        console.error("Error decoding audio data", err);
+    });
+}
 
   /* ══════════════════════════════════════
      9. EVENT LISTENERS
