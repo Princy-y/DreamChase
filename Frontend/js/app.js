@@ -16,6 +16,41 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!input || !btn || !section) return;
 
     window.addEventListener('scroll', () => {
+        // 👤 DYNAMIC NAVBAR LOGIC
+    const loggedInUser = localStorage.getItem('userName');
+    
+    if (loggedInUser) {
+        // 1. Change the "Login" link to "Hi, [Name]"
+        const loginLinks = document.querySelectorAll('a[href="login.html"]');
+        loginLinks.forEach(link => {
+            // Extract just their first name
+            const firstName = loggedInUser.split(' ')[0]; 
+            link.innerHTML = `<span style="color: #3ECFCF; font-weight: 600;">Hi, ${firstName} </span>`;
+            link.href = "dashboard.html"; // Clicking their name takes them to the dashboard
+        });
+
+        // 2. Turn the "Get Started" button into a "Logout" button
+        const ctaButtons = document.querySelectorAll('.nav-cta');
+        ctaButtons.forEach(btn => {
+            // Style it to look like a secondary 'Logout' button
+            btn.textContent = "Logout";
+            btn.style.background = "rgba(255, 255, 255, 0.1)";
+            btn.style.border = "1px solid rgba(255,255,255,0.2)";
+            btn.style.color = "#fff";
+            
+            // Overwrite any previous click actions
+            btn.onclick = (e) => {
+                e.preventDefault();
+                
+                // Wipe the memory clean!
+                localStorage.clear(); 
+                
+                // Refresh the page so the navbar goes back to normal
+                window.location.href = "index.html"; 
+            };
+        });
+    }
+
         if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 20);
     }, { passive: true });
 
@@ -89,8 +124,13 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('dc_career', career);
             localStorage.setItem('dc_roadmap', roadmap);
             localStorage.removeItem('dc_task_state');
+            localStorage.setItem('dc_unlocked_tasks', '0');
+            localStorage.setItem('dc_current_week', '1');
 
             setState('result');
+            
+            
+            
         } catch (err) {
             console.error(err);
             setState('empty');
@@ -99,4 +139,6 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.disabled = false;
         }
     }
+
+ 
 });
