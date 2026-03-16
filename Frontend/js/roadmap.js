@@ -18,9 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             btn.onclick = (e) => {
                 e.preventDefault();
-                
                 localStorage.clear(); 
-                
                 window.location.href = "index.html"; 
             };
         });
@@ -54,6 +52,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (statTasks) statTasks.textContent = tasks || '-';
     if (statCompleted) statCompleted.textContent = unlockedCount;
 
+    /* ── XP & Stars display ── */
+    updateXpDisplay();
+
+    /* ── Daily tasks sidebar ── */
     const tasksContainer = document.getElementById('tasks-container');
     if (tasksContainer) {
         const stepEls = roadmapContainer.querySelectorAll('.rm-step');
@@ -84,98 +86,162 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setTimeout(enforceTaskLocking, 500);
 
+    /* ══════════════════════════════════════
+       XP & STARS SYSTEM
+       ══════════════════════════════════════ */
+
+    function getXp()        { return parseInt(localStorage.getItem('dc_xp')) || 0; }
+    function getGoldStars() { return parseInt(localStorage.getItem('dc_gold_stars')) || 0; }
+    function getVerifiedTasks() {
+        try { return JSON.parse(localStorage.getItem('dc_verified_tasks') || '[]'); }
+        catch { return []; }
+    }
+
+    function addXp(amount) {
+        const xp = getXp() + amount;
+        localStorage.setItem('dc_xp', xp);
+        updateXpDisplay();
+        return xp;
+    }
+
+    function addGoldStar() {
+        const stars = getGoldStars() + 1;
+        localStorage.setItem('dc_gold_stars', stars);
+        updateXpDisplay();
+        return stars;
+    }
+
+    function markTaskVerified(taskIndex) {
+        const verified = getVerifiedTasks();
+        if (!verified.includes(taskIndex)) {
+            verified.push(taskIndex);
+            localStorage.setItem('dc_verified_tasks', JSON.stringify(verified));
+        }
+    }
+
+    function updateXpDisplay() {
+        const xpEl = document.getElementById('statXp');
+        const starsEl = document.getElementById('statStars');
+        if (xpEl) xpEl.textContent = getXp();
+        if (starsEl) starsEl.textContent = getGoldStars();
+    }
+
+    /* ══════════════════════════════════════
+       TASK LOCKING WITH DUAL-PATH
+       ══════════════════════════════════════ */
+
     function enforceTaskLocking() {
         const taskElements = document.querySelectorAll('.task-step');
         if (taskElements.length === 0) return;
 
         let currentUnlocked = parseInt(localStorage.getItem('dc_unlocked_tasks')) || 0;
-        let currentWeek = parseInt(localStorage.getItem('dc_current_week')) || 1; // Get current week
+        let currentWeek = parseInt(localStorage.getItem('dc_current_week')) || 1;
+        const verifiedTasks = getVerifiedTasks();
         
         if (statCompleted) statCompleted.textContent = currentUnlocked;
 
         taskElements.forEach((task, index) => {
             task.style.cursor = 'pointer';
             task.style.transition = 'all 0.3s ease';
+            task.style.position = 'relative';
             const numBox = task.querySelector('.rm-num');
 
+            // Remove any old action row / badges
+            const oldActions = task.querySelector('.task-actions');
+            if (oldActions) oldActions.remove();
+            const oldBadge = task.querySelector('.task-badge');
+            if (oldBadge) oldBadge.remove();
+
             if (index > currentUnlocked) {
+                // LOCKED
                 task.style.opacity = '0.3';
                 task.style.pointerEvents = 'none';
                 if(numBox) numBox.innerText = '🔒';
             } else if (index < currentUnlocked) {
+                // COMPLETED
                 task.style.opacity = '1';
-                task.style.background = 'rgba(0, 96, 213, 0.1)';
-                task.style.borderColor = '#0063d5ff';
-                task.style.pointerEvents = 'none'; 
-                if(numBox) {
-                    numBox.innerText = '✓';
-                    numBox.style.background = '#00c7d5ff';
+                task.style.pointerEvents = 'none';
+
+                const isVerified = verifiedTasks.includes(index);
+
+                if (isVerified) {
+                    task.style.background = 'rgba(255,215,0,0.06)';
+                    task.style.borderColor = 'rgba(255,215,0,0.25)';
+                    if(numBox) {
+                        numBox.innerText = '⭐';
+                        numBox.style.background = 'linear-gradient(135deg, #ffd700, #f0c040)';
+                    }
+                    // Add verified badge
+                    const badge = document.createElement('div');
+                    badge.className = 'task-badge task-badge--verified';
+                    badge.innerHTML = '⭐ Verified';
+                    task.appendChild(badge);
+                } else {
+                    task.style.background = 'rgba(0, 96, 213, 0.1)';
+                    task.style.borderColor = '#0063d5ff';
+                    if(numBox) {
+                        numBox.innerText = '✓';
+                        numBox.style.background = '#00c7d5ff';
+                    }
+                    // Add completed badge
+                    const badge = document.createElement('div');
+                    badge.className = 'task-badge task-badge--done';
+                    badge.innerHTML = '✓ Done';
+                    task.appendChild(badge);
                 }
             } else {
+                // CURRENT — show the dual-path action buttons
                 task.style.opacity = '1';
                 task.style.pointerEvents = 'auto';
-                task.style.background = 'rgba(255, 255, 255, 0.025)'; 
-                task.style.borderColor = 'transparent';
+                task.style.background = 'rgba(255, 255, 255, 0.025)';
+                task.style.borderColor = 'rgba(108,99,255,0.2)';
                 if(numBox) {
                     numBox.innerText = '☐';
                     numBox.style.background = 'var(--gradient)';
                 }
-            }
 
-            if (!task.dataset.listenerAdded) {
-                task.dataset.listenerAdded = 'true';
-                
-                task.addEventListener('click', () => {
-                    let newCount = index + 1;
-                    localStorage.setItem('dc_unlocked_tasks', newCount);
-                    
-                    window.dispatchEvent(new CustomEvent('updateDashboard'));
-                    
-                    enforceTaskLocking(); 
+                // Add action row below the task content
+                const actions = document.createElement('div');
+                actions.className = 'task-actions';
+                actions.innerHTML = `
+                    <button class="task-btn task-btn--done" data-index="${index}" title="Standard completion: +25 XP">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        Mark as Done
+                        <span class="task-btn__xp">+25 XP</span>
+                    </button>
+                    <button class="task-btn task-btn--verify" data-index="${index}" title="Mentor verification: +100 XP + Gold Star">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        Verify with Mentor
+                        <span class="task-btn__xp">+100 XP ⭐</span>
+                    </button>
+                `;
+                task.appendChild(actions);
 
-                    if (newCount === taskElements.length) {
-                        var duration = 3 * 1000;
-                        var end = Date.now() + duration;
-                        (function frame() {
-                            confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#6C63FF', '#3ECFCF'] });
-                            confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#6C63FF', '#3ECFCF'] });
-                            if (Date.now() < end) requestAnimationFrame(frame);
-                        }());
-
-                       // Show Custom Modal instead of default confirm
-                        setTimeout(() => {
-                            const modalOverlay = document.getElementById('levelUpModal');
-                            const modalText = document.getElementById('modalLevelText');
-                            const confirmBtn = document.getElementById('modalConfirm');
-                            const cancelBtn = document.getElementById('modalCancel');
-
-                            // Update the text dynamically
-                            modalText.innerText = `Level ${currentWeek} Complete!`;
-                            confirmBtn.innerText = `Unlock Level ${currentWeek + 1} `;
-
-                            // Show it with a smooth fade-in
-                            modalOverlay.style.display = 'flex';
-                            setTimeout(() => modalOverlay.classList.add('show'), 10);
-
-                            // Handle Clicks
-                            confirmBtn.onclick = () => {
-                                modalOverlay.classList.remove('show');
-                                setTimeout(() => modalOverlay.style.display = 'none', 300);
-                                triggerNextWeek(currentWeek + 1); // Your generator function!
-                            };
-
-                            cancelBtn.onclick = () => {
-                                modalOverlay.classList.remove('show');
-                                setTimeout(() => modalOverlay.style.display = 'none', 300);
-                            };
-                        }, 1500); // Waits for confetti to finish
-                    }
-                });
+                // Prevent task-level click from bubbling
+                task.style.cursor = 'default';
             }
         });
 
-        // The Fallback Button (Appears if they cancel the alert)
-        if (currentUnlocked === taskElements.length && !document.getElementById('nextWeekBtn')) {
+        // Bind action button events
+        document.querySelectorAll('.task-btn--done').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const idx = parseInt(btn.dataset.index);
+                handleStandardComplete(idx, taskElements);
+            });
+        });
+
+        document.querySelectorAll('.task-btn--verify').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const idx = parseInt(btn.dataset.index);
+                handleVerifyWithMentor(idx, taskElements);
+            });
+        });
+
+        // Fallback button for next week
+        let currentCount = parseInt(localStorage.getItem('dc_unlocked_tasks')) || 0;
+        if (currentCount === taskElements.length && !document.getElementById('nextWeekBtn')) {
             const btnWrap = document.createElement('div');
             btnWrap.style.textAlign = 'center';
             btnWrap.style.marginTop = '30px';
@@ -188,6 +254,74 @@ document.addEventListener('DOMContentLoaded', () => {
                 triggerNextWeek(currentWeek + 1);
             });
         }
+    }
+
+    /* ── Standard Path: Mark as Done ── */
+    function handleStandardComplete(taskIndex, taskElements) {
+        const newCount = taskIndex + 1;
+        localStorage.setItem('dc_unlocked_tasks', newCount);
+        addXp(25);
+
+        window.dispatchEvent(new CustomEvent('updateDashboard'));
+        enforceTaskLocking();
+
+        const currentWeek = parseInt(localStorage.getItem('dc_current_week')) || 1;
+
+        // All tasks done: show confetti + level up modal
+        if (newCount === taskElements.length) {
+            showLevelComplete(currentWeek);
+        }
+    }
+
+    /* ── Mentor Path: Verify with Mentor ── */
+    function handleVerifyWithMentor(taskIndex, taskElements) {
+        const taskEl = taskElements[taskIndex];
+        const taskText = taskEl.querySelector('.rm-p')?.textContent?.trim() || `Task ${taskIndex + 1}`;
+        const career = localStorage.getItem('dc_career') || 'Your Career';
+
+        // Save task context for the verification page
+        localStorage.setItem('dc_verify_task_index', taskIndex);
+        localStorage.setItem('dc_verify_task_text', taskText);
+        localStorage.setItem('dc_verify_career', career);
+        localStorage.setItem('dc_verify_total_tasks', taskElements.length);
+
+        // Navigate to verification page
+        window.location.href = 'chat.html';
+    }
+
+    /* ── Level Complete ── */
+    function showLevelComplete(currentWeek) {
+        var duration = 3 * 1000;
+        var end = Date.now() + duration;
+        (function frame() {
+            confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#6C63FF', '#3ECFCF'] });
+            confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#6C63FF', '#3ECFCF'] });
+            if (Date.now() < end) requestAnimationFrame(frame);
+        }());
+
+        setTimeout(() => {
+            const modalOverlay = document.getElementById('levelUpModal');
+            const modalText = document.getElementById('modalLevelText');
+            const confirmBtn = document.getElementById('modalConfirm');
+            const cancelBtn = document.getElementById('modalCancel');
+
+            modalText.innerText = `Level ${currentWeek} Complete!`;
+            confirmBtn.innerText = `Unlock Level ${currentWeek + 1} `;
+
+            modalOverlay.style.display = 'flex';
+            setTimeout(() => modalOverlay.classList.add('show'), 10);
+
+            confirmBtn.onclick = () => {
+                modalOverlay.classList.remove('show');
+                setTimeout(() => modalOverlay.style.display = 'none', 300);
+                triggerNextWeek(currentWeek + 1);
+            };
+
+            cancelBtn.onclick = () => {
+                modalOverlay.classList.remove('show');
+                setTimeout(() => modalOverlay.style.display = 'none', 300);
+            };
+        }, 1500);
     }
 
     // The Generator Engine
@@ -216,4 +350,20 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.reload();
         }
     }
+
+    /* ── Listen for verification approval from chat page ── */
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'dc_verification_approved') {
+            const taskIndex = parseInt(localStorage.getItem('dc_verify_task_index'));
+            if (!isNaN(taskIndex)) {
+                markTaskVerified(taskIndex);
+                addXp(100);
+                addGoldStar();
+                const newCount = taskIndex + 1;
+                localStorage.setItem('dc_unlocked_tasks', newCount);
+                localStorage.removeItem('dc_verification_approved');
+                enforceTaskLocking();
+            }
+        }
+    });
 });

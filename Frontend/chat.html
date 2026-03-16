@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DreamChase — AI Mentor Chat</title>
-  <meta name="description" content="Chat with your AI career mentor for personalized guidance and advice on your career journey." />
+  <title>DreamChase — Live Mentor Verification</title>
+  <meta name="description" content="Verify your career progress with your AI mentor through live camera or screen-share proof." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -15,73 +15,173 @@
   <!-- ── Navigation ── -->
   <nav class="navbar scrolled" id="navbar">
     <div class="nav-inner">
-      <a href="index.html" class="nav-logo">
-        <span>DreamChase</span>
-      </a>
+      <a href="index.html" class="nav-logo"><span>DreamChase</span></a>
       <div class="nav-links">
         <a href="index.html" class="nav-link">Home</a>
         <a href="dashboard.html" class="nav-link">Dashboard</a>
-        <a href="chat.html" class="nav-link">Chat</a>
+        <a href="chat.html" class="nav-link nav-link--active">Chat</a>
         <a href="login.html" class="nav-link">Login</a>
         <a href="#" class="nav-cta" id="getStartedBtn">Get Started</a>
       </div>
     </div>
   </nav>
 
-  <!-- ── Chat Container ── -->
-  <main class="chat-main">
+  <!-- ── Verification App Container ── -->
+  <main class="vf-app" id="vfApp" data-state="idle">
 
     <!-- Ambient blobs -->
     <div class="blob blob-1" aria-hidden="true"></div>
     <div class="blob blob-2" aria-hidden="true"></div>
 
-    <!-- Chat Messages Area -->
-    <div class="chat-messages" id="chatMessages">
+    <!-- ─ Left Column: Orb + Status + Controls ─ -->
+    <section class="vf-col vf-col--left">
 
-      <!-- Welcome Message -->
-      <div class="chat-welcome" id="chatWelcome">
-        <h2 class="chat-welcome__title">Hi there! I'm your <span class="gradient-text">AI Career Mentor</span></h2>
-        <p class="chat-welcome__sub">Ask me anything about your career path, skills to learn, interview prep, or roadmap guidance.</p>
+      <!-- Session Status Badge -->
+      <div class="vf-status-badge" id="statusBadge">
+        <span class="vf-status-badge__dot"></span>
+        <span class="vf-status-badge__text" id="statusText">Idle</span>
       </div>
 
-      <!-- Chat History -->
-      <div id="chat-history"></div>
+      <!-- Central Orb -->
+      <div class="vf-orb-wrap" id="orbWrap">
+        <div class="vf-orb-glow" id="orbGlow"></div>
+        <div class="vf-orb" id="vfOrb">
+          <div class="vf-orb__inner"></div>
+        </div>
+      </div>
 
+      <!-- Equalizer -->
+      <div class="vf-equalizer" id="equalizer">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+
+      <!-- Mentor Prompt (below orb) -->
+      <div class="vf-prompt" id="mentorPrompt">
+        <p class="vf-prompt__text" id="promptText">Start a live session to begin verification</p>
+      </div>
+
+      <!-- Control Buttons -->
+      <div class="vf-controls" id="vfControls">
+        <!-- Primary: Start Session / End Session -->
+        <button class="vf-ctrl vf-ctrl--primary" id="sessionBtn" title="Start Live Session">
+          <svg class="icon-play" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <svg class="icon-stop" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>
+          <span class="vf-ctrl__label" id="sessionLabel">Start Session</span>
+        </button>
+        <!-- Camera -->
+        <button class="vf-ctrl vf-ctrl--secondary" id="cameraBtn" title="Start Camera" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+          <span class="vf-ctrl__label">Camera</span>
+        </button>
+        <!-- Screen Share -->
+        <button class="vf-ctrl vf-ctrl--secondary" id="screenBtn" title="Share Screen" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+          <span class="vf-ctrl__label">Screen</span>
+        </button>
+        <!-- Verify -->
+        <button class="vf-ctrl vf-ctrl--accent" id="verifyBtn" title="Start Verification" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span class="vf-ctrl__label">Verify</span>
+        </button>
+        <!-- Mute -->
+        <button class="vf-ctrl vf-ctrl--icon" id="muteBtn" title="Mute" disabled>
+          <svg class="icon-mic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
+          <svg class="icon-mic-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2c0 .76-.13 1.49-.36 2.18"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ─ Right Column: Proof + Mentor Panel ─ -->
+    <section class="vf-col vf-col--right">
+
+      <!-- Proof Source Card -->
+      <div class="vf-proof-card" id="proofCard">
+        <div class="vf-proof-card__header">
+          <h3 class="vf-proof-card__title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            Proof Source
+          </h3>
+          <span class="vf-proof-card__badge" id="proofBadge">No Source</span>
+        </div>
+        <div class="vf-proof-card__preview" id="proofPreview">
+          <video id="proofVideo" autoplay muted playsinline></video>
+          <div class="vf-proof-card__empty" id="proofEmpty">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+            <span>Start camera or share screen</span>
+          </div>
+        </div>
+        <button class="vf-proof-card__stop" id="stopProofBtn" style="display:none">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>
+          Stop Preview
+        </button>
+      </div>
+
+      <!-- Mentor Panel -->
+      <div class="vf-mentor-panel" id="mentorPanel">
+        <div class="vf-mentor-panel__header">
+          <h3 class="vf-mentor-panel__title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"></path></svg>
+            Mentor Transcript
+          </h3>
+        </div>
+        <div class="vf-mentor-panel__body" id="mentorBody">
+          <!-- Transcript entries will be appended here -->
+          <div class="vf-transcript vf-transcript--system" id="transcriptPlaceholder">
+            <span class="vf-transcript__label">System</span>
+            <span class="vf-transcript__text">Session not started.</span>
+          </div>
+        </div>
+
+        <!-- Verification Checklist -->
+        <div class="vf-checklist" id="vfChecklist">
+          <div class="vf-checklist__item" id="checkProof" data-done="false">
+            <span class="vf-checklist__icon">○</span>
+            <span>Proof provided</span>
+          </div>
+          <div class="vf-checklist__item" id="checkQ1" data-done="false">
+            <span class="vf-checklist__icon">○</span>
+            <span>Question 1 answered</span>
+          </div>
+          <div class="vf-checklist__item" id="checkQ2" data-done="false">
+            <span class="vf-checklist__icon">○</span>
+            <span>Question 2 answered</span>
+          </div>
+          <div class="vf-checklist__item" id="checkResult" data-done="false">
+            <span class="vf-checklist__icon">○</span>
+            <span>Verification result</span>
+          </div>
+        </div>
+
+        <!-- Result Banner -->
+        <div class="vf-result-banner" id="resultBanner" style="display:none">
+          <span class="vf-result-banner__icon" id="resultIcon"></span>
+          <span class="vf-result-banner__text" id="resultText"></span>
+          <button class="vf-result-banner__retry" id="retryBtn" style="display:none">Retry</button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ── Reward Overlay (hidden) ── -->
+    <div class="vf-reward-overlay" id="rewardOverlay">
+      <div class="vf-reward__burst" id="rewardBurst"></div>
+      <div class="vf-reward__badge">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ffd700" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        <span class="vf-reward__text">Task Verified!</span>
+      </div>
+      <!-- Stars generated by JS -->
     </div>
 
-    <!-- Chat Input -->
-    <div class="chat-input-wrap">
-      <form id="chat-form" class="chat-form" autocomplete="off">
-        <div class="chat-input-row">
-          <div class="chat-input-icon" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-          <input
-            type="text"
-            id="chat-input"
-            class="chat-text-input"
-            placeholder="Ask your AI mentor anything…"
-            required
-            autocomplete="off"
-            spellcheck="false"
-            maxlength="500"
-            aria-label="Type your message"
-          />
-          <button type="submit" class="chat-send-btn" id="chatSendBtn" aria-label="Send message">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-        </div>
-        <p class="chat-disclaimer">AI responses are generated for guidance purposes. Always verify career advice with real professionals.</p>
-      </form>
+    <!-- Error Toast -->
+    <div class="vf-error" id="vfError">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+      <span id="errorText"></span>
     </div>
 
   </main>
 
   <script src="js/chat.js" defer></script>
   <script>
-    // Navbar scroll
     const navbar = document.getElementById('navbar');
     window.addEventListener('scroll', () => {
       navbar.classList.toggle('scrolled', window.scrollY > 20);
