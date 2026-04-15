@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const navbar = document.getElementById('navbar');
     const getStartedBtn = document.getElementById('getStartedBtn');
     const inputCard = document.getElementById('inputCard');
+    const imageInput = document.getElementById('imageInput');
+    const imageUploadLabel = document.getElementById('imageUploadLabel');
 
     if (!input || !btn || !section) return;
 
@@ -62,6 +64,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (imageInput && imageUploadLabel) {
+        imageInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                // Change color to indicate successful selection
+                imageUploadLabel.style.color = '#3ECFCF';
+            } else {
+                imageUploadLabel.style.color = 'var(--text-secondary)';
+            }
+        });
+    }
+
     input.addEventListener('keydown', e => {
         if (e.key === 'Enter') generate();
     });
@@ -93,10 +106,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function generate() {
         const career = input.value.trim();
-        if (!career) {
+        let imageBase64 = null;
+        
+        // Ensure at least career or image is provided
+        const hasImage = imageInput && imageInput.files && imageInput.files.length > 0;
+        if (!career && !hasImage) {
             input.classList.add('shake');
             setTimeout(() => input.classList.remove('shake'), 500);
             return;
+        }
+
+        if (hasImage) {
+            const file = imageInput.files[0];
+            try {
+                imageBase64 = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = error => reject(error);
+                    reader.readAsDataURL(file);
+                });
+            } catch (e) {
+                console.error("Error reading file:", e);
+            }
         }
 
         setState('loading');
@@ -104,13 +135,13 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.disabled = true;
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000);
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
 
         try {
             const res = await fetch('http://127.0.0.1:5000/generate-roadmap', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ career })
+                body: JSON.stringify({ career, imageBase64 })
             });
 
             if (!res.ok) throw new Error('API error');

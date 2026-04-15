@@ -70,6 +70,12 @@
             aria-label="Enter your dream career"
             maxlength="120"
           />
+          <label for="imageInput" id="imageUploadLabel" title="Upload Syllabus/Photo" style="cursor: pointer; padding: 0 15px; display: flex; align-items: center; color: var(--text-secondary); transition: color 0.2s ease;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <input type="file" id="imageInput" accept="image/png, image/jpeg, image/webp" style="display: none;" />
+          </label>
           <button class="generate-btn" id="generateBtn" aria-label="Generate roadmap">
             <span class="btn-text">Generate Roadmap</span>
             <span class="btn-icon" aria-hidden="true">
