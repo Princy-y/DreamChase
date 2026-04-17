@@ -88,8 +88,14 @@ def generate_roadmap():
         3. For resources:
            <div class="rm-bullet">
              <div class="rm-dot"></div>
-             <div class="rm-p">[Link/Resource]</div>
+             <div class="rm-p"><a href="[URL]" target="_blank">[Resource Name]</a></div>
            </div>
+
+        URL RULES: 
+        1. All <a> tags MUST include target="_blank"! 
+        2. DO NOT hallucinate or guess URLs! Many guessed links result in 404 errors.
+        3. You MUST use official, extremely stable resources (e.g., official docs, freeCodeCamp core routes, W3Schools, main Wikipedia pages).
+        4. If you are unsure if a URL exists, use the Google Search tool to verify it before outputting. Provide only reliable links.
 
         Generate exactly 7 tasks. Keep it concise, highly motivating, and achievable.
         """
@@ -155,8 +161,16 @@ def verify_socket(ws):
                 frame_data = msg.get("frame")
                 if frame_data and "," in frame_data:
                     latest_frame = frame_data.split(",")[1]
+                    print(f"Server received proof_frame and updated latest_frame, length: {len(latest_frame)}")
             
             elif msg.get("type") == "start_verification":
+                print("Server received start_verification message.")
+                # Allow frame to be passed directly in start_verification to avoid race conditions
+                direct_frame = msg.get("frame")
+                if direct_frame and "," in direct_frame:
+                    latest_frame = direct_frame.split(",")[1]
+                    print("Extracted frame directly from start_verification message.")
+
                 task_ctx = {
                     "index": msg.get("task_index"),
                     "text": msg.get("task_text"),
@@ -194,15 +208,15 @@ def verify_socket(ws):
                         feedback = "I see your work. Great progress!"
                         question = response.text.split('?')[0] + '?' if '?' in response.text else "Can you explain your approach?"
 
-                    ws.send(json.dumps({"type": "mentor_prompt", "text": feedback}))
-                    time.sleep(2)
                     ws.send(json.dumps({
                         "type": "verification_question",
                         "index": 1,
+                        "feedback": feedback,
                         "text": question
                     }))
                     conversation_history.append({"role": "assistant", "content": question})
                 else:
+                    print("Error: latest_frame is missing when start_verification was called.")
                     ws.send(json.dumps({"type": "mentor_prompt", "text": "I can't see your proof yet. Please share your screen or camera."}))
 
             elif msg.get("type") == "user_reply":

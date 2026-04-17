@@ -2177,3 +2177,73 @@ body {
     padding: 16px
   }
 }
+
+/* Custom Input Box for Answer */
+.vf-answer-wrap {
+  display: flex;
+  gap: 12px;
+  margin: 16px 20px 20px;
+  background: var(--bg-card);
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15), 0 0 0 1px rgba(108, 99, 255, 0.05) inset;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.vf-answer-wrap:focus-within {
+  border-color: rgba(108, 99, 255, 0.4);
+  box-shadow: 0 0 0 1px rgba(108, 99, 255, 0.2), 0 8px 25px rgba(0,0,0,0.3);
+}
+.vf-answer-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-family: var(--font);
+  font-size: 14.5px;
+  outline: none;
+  padding: 4px 8px;
+  caret-color: var(--grad-start);
+}
+.vf-answer-input::placeholder {
+  color: var(--text-muted);
+}
+.vf-answer-btn {
+  background: var(--gradient);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-family: var(--font);
+  font-size: 14px;
+  letter-spacing: -0.2px;
+  box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+.vf-answer-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(108, 99, 255, 0.4);
+}
+.vf-answer-btn:active {
+  transform: translateY(0);
+}
+
+/* Pulsing Orb */
+.vf-orb.pulsing {
+  animation: orbPulse 1s infinite alternate;
+}
+@keyframes orbPulse {
+  0% { transform: scale(1); filter: brightness(1); }
+  100% { transform: scale(1.15); filter: brightness(1.4); }
+}
+.vf-orb-glow.pulsing {
+  animation: orbGlowPulse 1s infinite alternate;
+}
+@keyframes orbGlowPulse {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+  100% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.9; }
+}

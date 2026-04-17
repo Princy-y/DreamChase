@@ -1,12 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
     const loggedInUser = localStorage.getItem('userName');
-    
+
     if (loggedInUser) {
         const loginLinks = document.querySelectorAll('a[href="login.html"]');
         loginLinks.forEach(link => {
-            const firstName = loggedInUser.split(' ')[0]; 
+            const firstName = loggedInUser.split(' ')[0];
             link.innerHTML = `<span style="color: #3ECFCF; font-weight: 600;">Hi, ${firstName} </span>`;
-            link.href = "dashboard.html"; 
+            link.href = "dashboard.html";
         });
 
         const ctaButtons = document.querySelectorAll('.nav-cta');
@@ -15,11 +15,11 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.style.background = "rgba(255, 255, 255, 0.1)";
             btn.style.border = "1px solid rgba(255,255,255,0.2)";
             btn.style.color = "#fff";
-            
+
             btn.onclick = (e) => {
                 e.preventDefault();
-                localStorage.clear(); 
-                window.location.href = "index.html"; 
+                localStorage.clear();
+                window.location.href = "index.html";
             };
         });
     }
@@ -40,6 +40,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     roadmapContainer.innerHTML = rawRoadmap;
 
+    roadmapContainer.querySelectorAll('a').forEach(a => {
+        a.setAttribute('target', '_blank');
+        a.setAttribute('rel', 'noopener noreferrer');
+    });
+
     const phases = roadmapContainer.querySelectorAll('.rm-h2').length;
     const tasks = roadmapContainer.querySelectorAll('.rm-step').length;
     let unlockedCount = parseInt(localStorage.getItem('dc_unlocked_tasks')) || 0;
@@ -47,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const statPhases = document.getElementById('statPhases');
     const statTasks = document.getElementById('statTasks');
     const statCompleted = document.getElementById('statCompleted');
-    
+
     if (statPhases) statPhases.textContent = phases || '-';
     if (statTasks) statTasks.textContent = tasks || '-';
     if (statCompleted) statCompleted.textContent = unlockedCount;
@@ -63,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const wrap = document.createElement('div');
             wrap.className = 'daily-tasks';
             let shown = 0;
-            
+
             stepEls.forEach(step => {
                 if (shown >= 5) return;
                 const text = step.querySelector('.rm-p, span, div:not(.rm-num)')?.textContent?.trim();
@@ -90,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
        XP & STARS SYSTEM
        ══════════════════════════════════════ */
 
-    function getXp()        { return parseInt(localStorage.getItem('dc_xp')) || 0; }
+    function getXp() { return parseInt(localStorage.getItem('dc_xp')) || 0; }
     function getGoldStars() { return parseInt(localStorage.getItem('dc_gold_stars')) || 0; }
     function getVerifiedTasks() {
         try { return JSON.parse(localStorage.getItem('dc_verified_tasks') || '[]'); }
@@ -137,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let currentUnlocked = parseInt(localStorage.getItem('dc_unlocked_tasks')) || 0;
         let currentWeek = parseInt(localStorage.getItem('dc_current_week')) || 1;
         const verifiedTasks = getVerifiedTasks();
-        
+
         if (statCompleted) statCompleted.textContent = currentUnlocked;
 
         taskElements.forEach((task, index) => {
@@ -156,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // LOCKED
                 task.style.opacity = '0.3';
                 task.style.pointerEvents = 'none';
-                if(numBox) numBox.innerText = '🔒';
+                if (numBox) numBox.innerText = '🔒';
             } else if (index < currentUnlocked) {
                 // COMPLETED
                 task.style.opacity = '1';
@@ -167,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (isVerified) {
                     task.style.background = 'rgba(255,215,0,0.06)';
                     task.style.borderColor = 'rgba(255,215,0,0.25)';
-                    if(numBox) {
+                    if (numBox) {
                         numBox.innerText = '⭐';
                         numBox.style.background = 'linear-gradient(135deg, #ffd700, #f0c040)';
                     }
@@ -179,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     task.style.background = 'rgba(0, 96, 213, 0.1)';
                     task.style.borderColor = '#0063d5ff';
-                    if(numBox) {
+                    if (numBox) {
                         numBox.innerText = '✓';
                         numBox.style.background = '#00c7d5ff';
                     }
@@ -195,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 task.style.pointerEvents = 'auto';
                 task.style.background = 'rgba(255, 255, 255, 0.025)';
                 task.style.borderColor = 'rgba(108,99,255,0.2)';
-                if(numBox) {
+                if (numBox) {
                     numBox.innerText = '☐';
                     numBox.style.background = 'var(--gradient)';
                 }
@@ -247,9 +252,9 @@ document.addEventListener('DOMContentLoaded', () => {
             btnWrap.style.marginTop = '30px';
             btnWrap.style.marginBottom = '20px';
             btnWrap.innerHTML = `<button id="nextWeekBtn" style="padding: 12px 24px; font-size: 16px; background: var(--gradient); border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 600; box-shadow: 0 4px 15px rgba(108, 99, 255, 0.4);"> Unlock Level ${currentWeek + 1}</button>`;
-            
+
             document.getElementById('roadmap-container').appendChild(btnWrap);
-            
+
             document.getElementById('nextWeekBtn').addEventListener('click', () => {
                 triggerNextWeek(currentWeek + 1);
             });
@@ -328,9 +333,9 @@ document.addEventListener('DOMContentLoaded', () => {
     async function triggerNextWeek(nextWeekNumber) {
         const baseCareer = localStorage.getItem('dc_career') || 'Your Career';
         document.getElementById('roadmap-container').innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-secondary);">Generating Level ${nextWeekNumber}... please wait. </div>`;
-        
+
         try {
-            const nextLevelCareer = `Level ${nextWeekNumber} of ${baseCareer}`; 
+            const nextLevelCareer = `Level ${nextWeekNumber} of ${baseCareer}`;
             const res = await fetch('http://127.0.0.1:5000/generate-roadmap', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -339,11 +344,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!res.ok) throw new Error('API error');
             const data = await res.json();
-            
+
             localStorage.setItem('dc_roadmap', data.roadmap || data.response);
             localStorage.setItem('dc_unlocked_tasks', '0');
-            localStorage.setItem('dc_current_week', nextWeekNumber); 
-            
+            localStorage.setItem('dc_current_week', nextWeekNumber);
+
             window.location.reload();
         } catch (err) {
             alert('Oops! Make sure your Python server is running.');

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=2" />
 </head>
 <body>
 
@@ -50,10 +50,7 @@
         </div>
       </div>
 
-      <!-- Equalizer -->
-      <div class="vf-equalizer" id="equalizer">
-        <span></span><span></span><span></span><span></span><span></span>
-      </div>
+      <!-- Equalizer Removed -->
 
       <!-- Mentor Prompt (below orb) -->
       <div class="vf-prompt" id="mentorPrompt">
@@ -132,6 +129,12 @@
           </div>
         </div>
 
+        <!-- User Answer Input -->
+        <div class="vf-answer-wrap" id="answerWrap" style="display:none">
+          <input type="text" id="answerInput" class="vf-answer-input" placeholder="Type your answer here..." autocomplete="off">
+          <button id="sendAnswerBtn" class="vf-answer-btn">Send</button>
+        </div>
+
         <!-- Verification Checklist -->
         <div class="vf-checklist" id="vfChecklist">
           <div class="vf-checklist__item" id="checkProof" data-done="false">
@@ -180,7 +183,7 @@
 
   </main>
 
-  <script src="js/chat.js" defer></script>
+  <script src="js/chat.js?v=5" defer></script>
   <script>
     const navbar = document.getElementById('navbar');
     window.addEventListener('scroll', () => {

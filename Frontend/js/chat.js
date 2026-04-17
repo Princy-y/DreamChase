@@ -30,43 +30,69 @@ document.addEventListener('DOMContentLoaded', () => {
      ══════════════════════════════════════ */
   const $ = id => document.getElementById(id);
 
-  const app          = $('vfApp');
-  const statusText   = $('statusText');
-  const promptText   = $('promptText');
-  const sessionBtn   = $('sessionBtn');
+  const app = $('vfApp');
+  const statusText = $('statusText');
+  const promptText = $('promptText');
+  const sessionBtn = $('sessionBtn');
   const sessionLabel = $('sessionLabel');
-  const cameraBtn    = $('cameraBtn');
-  const screenBtn    = $('screenBtn');
-  const verifyBtn    = $('verifyBtn');
-  const muteBtn      = $('muteBtn');
+  const cameraBtn = $('cameraBtn');
+  const screenBtn = $('screenBtn');
+  const verifyBtn = $('verifyBtn');
+  const muteBtn = $('muteBtn');
   const stopProofBtn = $('stopProofBtn');
-  const proofVideo   = $('proofVideo');
-  const proofEmpty   = $('proofEmpty');
-  const proofBadge   = $('proofBadge');
-  const mentorBody   = $('mentorBody');
+  const proofVideo = $('proofVideo');
+  const proofEmpty = $('proofEmpty');
+  const proofBadge = $('proofBadge');
+  const mentorBody = $('mentorBody');
   const resultBanner = $('resultBanner');
-  const resultIcon   = $('resultIcon');
-  const resultText   = $('resultText');
-  const retryBtn     = $('retryBtn');
-  const rewardOverlay= $('rewardOverlay');
-  const vfError      = $('vfError');
-  const errorText    = $('errorText');
+  const resultIcon = $('resultIcon');
+  const resultText = $('resultText');
+  const retryBtn = $('retryBtn');
+  const rewardOverlay = $('rewardOverlay');
+  const vfError = $('vfError');
+  const errorText = $('errorText');
 
   // Checklist items
-  const checkProof  = $('checkProof');
-  const checkQ1     = $('checkQ1');
-  const checkQ2     = $('checkQ2');
+  const checkProof = $('checkProof');
+  const checkQ1 = $('checkQ1');
+  const checkQ2 = $('checkQ2');
   const checkResult = $('checkResult');
+
+  // Input Box for answers
+  const answerWrap = $('answerWrap');
+  const answerInput = $('answerInput');
+  const sendAnswerBtn = $('sendAnswerBtn');
+  const vfOrb = $('vfOrb');
+  const orbGlow = $('orbGlow');
 
   if (!app || !sessionBtn) return;
 
   /* ── Task context from dashboard ── */
-  const taskIndex    = localStorage.getItem('dc_verify_task_index');
-  const taskText     = localStorage.getItem('dc_verify_task_text');
-  const taskCareer   = localStorage.getItem('dc_verify_career');
-  const hasTaskCtx   = taskIndex !== null && taskText;
+  let taskIndex = localStorage.getItem('dc_verify_task_index');
+  let taskText = localStorage.getItem('dc_verify_task_text');
+  let taskCareer = localStorage.getItem('dc_verify_career');
+  let hasTaskCtx = taskIndex !== null && taskText;
 
-  // Show task banner if navigated from dashboard
+  if (!hasTaskCtx) {
+    const rawRoadmap = localStorage.getItem('dc_roadmap');
+    if (rawRoadmap) {
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = rawRoadmap;
+      const steps = tempDiv.querySelectorAll('.rm-step');
+      if (steps.length > 0) {
+        let unlocked = parseInt(localStorage.getItem('dc_unlocked_tasks')) || 0;
+        if (unlocked >= steps.length) unlocked = steps.length - 1;
+        const taskEl = steps[unlocked];
+
+        taskText = (taskEl.querySelector('.rm-p') || taskEl).textContent?.trim() || `Task ${unlocked + 1}`;
+        taskIndex = unlocked;
+        taskCareer = localStorage.getItem('dc_career') || 'Your Career';
+        hasTaskCtx = true;
+      }
+    }
+  }
+
+  // Show task banner if navigated from dashboard or retrieved from memory
   if (hasTaskCtx) {
     promptText.textContent = `Verify: ${taskText}`;
     const taskBanner = document.createElement('div');
@@ -77,45 +103,53 @@ document.addEventListener('DOMContentLoaded', () => {
       <a href="dashboard.html" class="vf-task-banner__back">← Back to Dashboard</a>
     `;
     app.querySelector('.vf-col--left')?.prepend(taskBanner);
+  } else {
+    // Disable start button if NO roadmap exists
+    if (sessionBtn) {
+      sessionBtn.disabled = true;
+      sessionBtn.style.opacity = '0.5';
+      promptText.textContent = "No tasks available. Please generate a roadmap in the Dashboard first.";
+    }
   }
 
   /* ══════════════════════════════════════
      3. STATE MANAGEMENT
      ══════════════════════════════════════ */
   const STATES = {
-    IDLE:            'idle',
-    CONNECTING:      'connecting',
-    LIVE_READY:      'live_ready',
-    CAMERA_ON:       'camera_on',
-    SCREEN_SHARING:  'screen_sharing',
+    IDLE: 'idle',
+    CONNECTING: 'connecting',
+    LIVE_READY: 'live_ready',
+    CAMERA_ON: 'camera_on',
+    SCREEN_SHARING: 'screen_sharing',
     VERIFYING_PROOF: 'verifying_proof',
-    QUESTION_1:      'question_1',
-    QUESTION_2:      'question_2',
-    APPROVED:        'approved',
-    REJECTED:        'rejected',
-    SESSION_ENDED:   'session_ended'
+    QUESTION_1: 'question_1',
+    QUESTION_2: 'question_2',
+    APPROVED: 'approved',
+    REJECTED: 'rejected',
+    SESSION_ENDED: 'session_ended'
   };
 
   const STATUS_LABELS = {
-    idle:            'Idle',
-    connecting:      'Connecting',
-    live_ready:      'Live Ready',
-    camera_on:       'Camera On',
-    screen_sharing:  'Screen Sharing',
+    idle: 'Idle',
+    connecting: 'Connecting',
+    live_ready: 'Live Ready',
+    camera_on: 'Camera On',
+    screen_sharing: 'Screen Sharing',
     verifying_proof: 'Verifying Proof',
-    question_1:      'Question 1',
-    question_2:      'Question 2',
-    approved:        'Approved ✓',
-    rejected:        'Rejected ✗',
-    session_ended:   'Session Ended'
+    question_1: 'Question 1',
+    question_2: 'Question 2',
+    approved: 'Approved ✓',
+    rejected: 'Rejected ✗',
+    session_ended: 'Session Ended'
   };
 
-  let currentState   = STATES.IDLE;
-  let proofSource    = null; // 'camera' | 'screen' | null
-  let mediaStream    = null;
-  let audioStream    = null;
-  let isMuted        = false;
-  let ws             = null;
+  let currentState = STATES.IDLE;
+  let proofSource = null; // 'camera' | 'screen' | null
+  let mediaStream = null;
+  let audioStream = null;
+  let isMuted = false;
+  let ws = null;
+  let currentQuestionIndex = 0;
 
   function setState(state) {
     currentState = state;
@@ -141,10 +175,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Camera / Screen / Verify / Mute enabled when live
     const canCapture = [STATES.LIVE_READY, STATES.CAMERA_ON, STATES.SCREEN_SHARING].includes(s);
-    cameraBtn.disabled  = !canCapture;
-    screenBtn.disabled  = !canCapture;
-    verifyBtn.disabled  = !(proofSource && canCapture);
-    muteBtn.disabled    = !sessionActive;
+    cameraBtn.disabled = !canCapture;
+    screenBtn.disabled = !canCapture;
+    verifyBtn.disabled = !(proofSource && canCapture);
+    muteBtn.disabled = !sessionActive;
 
     // Active states for camera/screen buttons
     cameraBtn.classList.toggle('active', proofSource === 'camera');
@@ -227,6 +261,75 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ══════════════════════════════════════
+     5. TEXT-TO-SPEECH (BEAUTIFUL VOICE)
+     ══════════════════════════════════════ */
+  let currentUtterance = null;
+
+  function speakText(text) {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel(); // Stop current speech
+
+      const utterance = new SpeechSynthesisUtterance(text);
+
+      const voices = window.speechSynthesis.getVoices();
+
+      // Ranking high-quality voices across different browsers (Edge Natural > Google Premium > Apple Premium)
+      const voicePreferences = [
+        "Microsoft Aria Online",     // Edge Windows (Natural)
+        "Microsoft Jenny Online",    // Edge Windows (Natural)
+        "Microsoft Sonia Online",    // Edge UK (Natural)
+        "Google UK English Female",  // Chrome High Quality
+        "Google US English",         // Chrome Standard
+        "Samantha",                  // Mac Premium
+        "Tessa",                     // Mac Premium
+        "Daniel"                     // Mac UK
+      ];
+
+      let selectedVoice = null;
+      for (const pref of voicePreferences) {
+        selectedVoice = voices.find(v => v.name.includes(pref));
+        if (selectedVoice) break;
+      }
+
+      // Fallback to any english voice if none of the premiums are found
+      if (!selectedVoice) {
+        selectedVoice = voices.find(v => v.lang.startsWith("en") && (v.name.includes("Female") || v.name.includes("Google")));
+      }
+      if (!selectedVoice) {
+        selectedVoice = voices.find(v => v.lang.startsWith("en"));
+      }
+
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+
+      // Pulse animation when speaking
+      utterance.onstart = () => {
+        if (vfOrb) vfOrb.classList.add('pulsing');
+        if (orbGlow) orbGlow.classList.add('pulsing');
+      };
+      utterance.onend = () => {
+        if (vfOrb) vfOrb.classList.remove('pulsing');
+        if (orbGlow) orbGlow.classList.remove('pulsing');
+      };
+
+      currentUtterance = utterance;
+      window.speechSynthesis.speak(utterance);
+    }
+  }
+
+  // Load voices proactively on startup
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged = () => {
+      window.speechSynthesis.getVoices();
+    };
+  }
+
+  /* ══════════════════════════════════════
      5. WEBSOCKET HANDLERS
      ══════════════════════════════════════ */
 
@@ -279,19 +382,35 @@ document.addEventListener('DOMContentLoaded', () => {
       case 'mentor_prompt':
         promptText.textContent = msg.text;
         addTranscript('mentor', msg.text);
+        speakText(msg.text);
         markCheck(checkProof);
         break;
 
       case 'verification_question':
         if (msg.index === 1) {
           setState(STATES.QUESTION_1);
-          markCheck(checkQ1);
+          currentQuestionIndex = 1;
         } else if (msg.index === 2) {
           setState(STATES.QUESTION_2);
-          markCheck(checkQ2);
+          currentQuestionIndex = 2;
         }
-        promptText.textContent = msg.text;
+
+        let fullSpeech = msg.text;
+
+        if (msg.feedback) {
+          addTranscript('mentor', msg.feedback);
+          fullSpeech = msg.feedback + " " + msg.text;
+        }
+
         addTranscript('question', `Q${msg.index}: ${msg.text}`);
+        promptText.textContent = msg.text;
+        speakText(fullSpeech);
+
+        // Show answer box!
+        if (answerWrap && answerInput) {
+          answerWrap.style.display = 'flex';
+          answerInput.focus();
+        }
         break;
 
       case 'user_transcript':
@@ -304,14 +423,27 @@ document.addEventListener('DOMContentLoaded', () => {
         break;
 
       case 'verification_result':
+        // Instantly shut off any ongoing voice
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
+        if (vfOrb) vfOrb.classList.remove('pulsing');
+        if (orbGlow) orbGlow.classList.remove('pulsing');
+
         markCheck(checkResult);
+        if (answerWrap) answerWrap.style.display = 'none';
+
         if (msg.status === 'approved') {
           setState(STATES.APPROVED);
           showResultBanner('approved', msg.message || 'Task verified!');
+
+          // Play a brief success message, but don't read long paragraphs
+          speakText("Verification complete. Excellent work!");
           triggerRewardAnimation();
         } else {
           setState(STATES.REJECTED);
           showResultBanner('rejected', msg.message || 'Needs retry.');
+          speakText(msg.message || 'Please retry');
         }
         break;
 
@@ -323,9 +455,9 @@ document.addEventListener('DOMContentLoaded', () => {
         showError(msg.message || 'Server error occurred.');
         addTranscript('system', `Error: ${msg.message}`);
         break;
-      
-        case 'assistant_audio':
-        playAudioBuffer(msg.data); 
+
+      case 'assistant_audio':
+        playAudioBuffer(msg.data);
         break;
 
       default:
@@ -473,12 +605,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function endSession() {
-    if (ws) { try { ws.close(); } catch(e) {} ws = null; }
+    if (ws) { try { ws.close(); } catch (e) { } ws = null; }
     stopProof();
     isMuted = false;
     muteBtn.classList.remove('muted');
     muteBtn.querySelector('.icon-mic').style.display = 'block';
     muteBtn.querySelector('.icon-mic-off').style.display = 'none';
+
+    if (answerWrap) answerWrap.style.display = 'none';
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    if (vfOrb) vfOrb.classList.remove('pulsing');
+    if (orbGlow) orbGlow.classList.remove('pulsing');
+
     setState(STATES.SESSION_ENDED);
     promptText.textContent = 'Session ended. Start a new session to verify again.';
     addTranscript('system', 'Session ended.');
@@ -502,43 +640,53 @@ document.addEventListener('DOMContentLoaded', () => {
     setState(STATES.VERIFYING_PROOF);
     promptText.textContent = 'Voice verification started! Listen for the question...';
     addTranscript('system', `Verification started with ${proofSource}.`);
-    
-    const wsMsg = { type: 'start_verification', source: proofSource };
+
+    // Capture a frame immediately to send with the start_verification request
+    let frameDataUrl = null;
+    if (proofVideo.videoWidth > 0) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 640;
+      canvas.height = 480;
+      const ctx2d = canvas.getContext('2d');
+      ctx2d.drawImage(proofVideo, 0, 0, canvas.width, canvas.height);
+      frameDataUrl = canvas.toDataURL('image/jpeg', 0.6);
+    }
+
+    const wsMsg = { type: 'start_verification', source: proofSource, frame: frameDataUrl };
     if (hasTaskCtx) {
       wsMsg.task_index = parseInt(taskIndex);
       wsMsg.task_text = taskText;
       wsMsg.career = taskCareer;
     }
     sendWsMessage(wsMsg);
-    
+
     startStreamingToGemini();
   }
 
-let streamInterval;
-let audioProcessor;
-let audioCtx;
+  let streamInterval;
+  let audioProcessor;
+  let audioCtx;
 
-// This takes the camera/mic and streams it to your Python backend
-function startStreamingToGemini() {
+  // This takes the camera/mic and streams it to your Python backend
+  function startStreamingToGemini() {
     if (!mediaStream || !ws || ws.readyState !== WebSocket.OPEN) return;
 
     // 1. Stream Video Frames (1 frame per second)
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    
-    streamInterval = setInterval(() => {
-        if (proofVideo.videoWidth > 0 && currentState === 'verifying_proof') {
-            canvas.width = 640; // Resize to save bandwidth
-            canvas.height = 480;
-            ctx.drawImage(proofVideo, 0, 0, canvas.width, canvas.height);
-            const base64Image = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
 
-            sendWsMessage({
-                realtimeInput: {
-                    mediaChunks: [{ mimeType: "image/jpeg", data: base64Image }]
-                }
-            });
-        }
+    streamInterval = setInterval(() => {
+      if (proofVideo.videoWidth > 0 && currentState === 'verifying_proof') {
+        canvas.width = 640; // Resize to save bandwidth
+        canvas.height = 480;
+        ctx.drawImage(proofVideo, 0, 0, canvas.width, canvas.height);
+        const frameDataUrl = canvas.toDataURL('image/jpeg', 0.5);
+
+        sendWsMessage({
+          type: 'proof_frame',
+          frame: frameDataUrl
+        });
+      }
     }, 1000);
 
     // 2. Stream Audio (Must be 16kHz PCM for Gemini)
@@ -547,73 +695,73 @@ function startStreamingToGemini() {
     audioProcessor = audioCtx.createScriptProcessor(4096, 1, 1);
 
     audioProcessor.onaudioprocess = (e) => {
-        if (isMuted || currentState !== 'verifying_proof') return; 
-        
-        const inputData = e.inputBuffer.getChannelData(0);
-        const pcmData = new Int16Array(inputData.length);
-        for (let i = 0; i < inputData.length; i++) {
-            pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
+      if (isMuted || currentState !== 'verifying_proof') return;
+
+      const inputData = e.inputBuffer.getChannelData(0);
+      const pcmData = new Int16Array(inputData.length);
+      for (let i = 0; i < inputData.length; i++) {
+        pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
+      }
+
+      // Convert to Base64
+      let binary = '';
+      const bytes = new Uint8Array(pcmData.buffer);
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+
+      sendWsMessage({
+        realtimeInput: {
+          mediaChunks: [{ mimeType: "audio/pcm;rate=16000", data: btoa(binary) }]
         }
-        
-        // Convert to Base64
-        let binary = '';
-        const bytes = new Uint8Array(pcmData.buffer);
-        for (let i = 0; i < bytes.byteLength; i++) {
-            binary += String.fromCharCode(bytes[i]);
-        }
-        
-        sendWsMessage({
-            realtimeInput: {
-                mediaChunks: [{ mimeType: "audio/pcm;rate=16000", data: btoa(binary) }]
-            }
-        });
+      });
     };
 
     source.connect(audioProcessor);
     audioProcessor.connect(audioCtx.destination);
-}
+  }
 
-// Clean up when session ends
-function stopStreaming() {
+  // Clean up when session ends
+  function stopStreaming() {
     clearInterval(streamInterval);
     if (audioProcessor) audioProcessor.disconnect();
     if (audioCtx) audioCtx.close();
-    
-}
 
-/* ══════════════════════════════════════
-   10. AUDIO PLAYBACK (Gemini's Voice)
-   ══════════════════════════════════════ */
-let playbackCtx;
-let nextStartTime = 0;
+  }
 
-function playAudioBuffer(base64Data) {
+  /* ══════════════════════════════════════
+     10. AUDIO PLAYBACK (Gemini's Voice)
+     ══════════════════════════════════════ */
+  let playbackCtx;
+  let nextStartTime = 0;
+
+  function playAudioBuffer(base64Data) {
     if (!playbackCtx) {
-        // Gemini Live outputs at 24kHz
-        playbackCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
-        nextStartTime = playbackCtx.currentTime;
+      // Gemini Live outputs at 24kHz
+      playbackCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+      nextStartTime = playbackCtx.currentTime;
     }
 
     // Convert Base64 back to raw binary buffer
     const binaryStr = atob(base64Data);
     const bytes = new Uint8Array(binaryStr.length);
     for (let i = 0; i < binaryStr.length; i++) {
-        bytes[i] = binaryStr.charCodeAt(i);
+      bytes[i] = binaryStr.charCodeAt(i);
     }
 
     playbackCtx.decodeAudioData(bytes.buffer, (buffer) => {
-        const source = playbackCtx.createBufferSource();
-        source.buffer = buffer;
-        source.connect(playbackCtx.destination);
-        
-        // Schedule playback to prevent clicking/gaps
-        const startTime = Math.max(nextStartTime, playbackCtx.currentTime);
-        source.start(startTime);
-        nextStartTime = startTime + buffer.duration;
+      const source = playbackCtx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(playbackCtx.destination);
+
+      // Schedule playback to prevent clicking/gaps
+      const startTime = Math.max(nextStartTime, playbackCtx.currentTime);
+      source.start(startTime);
+      nextStartTime = startTime + buffer.duration;
     }, (err) => {
-        console.error("Error decoding audio data", err);
+      console.error("Error decoding audio data", err);
     });
-}
+  }
 
   /* ══════════════════════════════════════
      9. EVENT LISTENERS
@@ -646,6 +794,39 @@ function playAudioBuffer(base64Data) {
   });
 
   verifyBtn.addEventListener('click', startVerification);
+
+  // Send textual answer
+  function sendUserAnswer() {
+    if (!answerInput) return;
+    const text = answerInput.value.trim();
+    if (text === '') return;
+
+    // Mark checklist ONLY when answered
+    if (currentQuestionIndex === 1) markCheck(checkQ1);
+    else if (currentQuestionIndex === 2) markCheck(checkQ2);
+
+    // Hide input box until next prompt
+    if (answerWrap) answerWrap.style.display = 'none';
+    answerInput.value = '';
+
+    // Stop local TTS
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+
+    // Pulse to show listening
+    if (vfOrb) vfOrb.classList.add('pulsing');
+    if (orbGlow) orbGlow.classList.add('pulsing');
+
+    sendWsMessage({ type: 'user_reply', text: text });
+  }
+
+  if (sendAnswerBtn) {
+    sendAnswerBtn.addEventListener('click', sendUserAnswer);
+  }
+  if (answerInput) {
+    answerInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendUserAnswer();
+    });
+  }
 
   muteBtn.addEventListener('click', toggleMute);
 
